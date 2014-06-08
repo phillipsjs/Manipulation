@@ -6,10 +6,10 @@
 rm(list=ls())
 
 ## Set working directory as the folder 'Phillips_Manipulating_Morality' which contains 
-## this R file; All commands are set relative to that folder. 
-setwd("/Users/Jonathan/Documents/Phillips_Shaw/CogSci/Materials_for_Publication")
+## this R file; All directories are set relative to that folder. 
+setwd("####")
 
-source("Manipulation.source.R")
+source("manipulationSource.R")
 
 ##NB: Multiple mediation is calculated in SPSS using  Preacher and Hayes (2008) INDIRECT
 ##    The SPSS macro for INDIRECT can be downloaded from http://afhayes.com/spss-sas-and-mplus-macros-and-code.html
