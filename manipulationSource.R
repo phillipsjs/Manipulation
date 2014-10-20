@@ -5,6 +5,7 @@ library(reshape2)
 library(Hmisc)
 library(lsr) #this is for calculating eta squared
 library(psych) #this is for drawing mediation diagrams
+library(car) #this is for the vif analysis
 
 ##for graphs
 theme_set(theme_bw())

@@ -5,7 +5,7 @@
 
 rm(list=ls())
 
-## Set working directory as the folder 'Phillips_Manipulating_Morality' which contains 
+## Set working directory as the folder 'Manipulation' which contains 
 ## this R file; All directories are set relative to that folder. 
 setwd("####")
 
@@ -44,7 +44,7 @@ demog.data <- rbind(Study1.data[,c(8:12,14)],
                     Study5.data[,c(15:17,19:20,23)]
                    )
 
-demog.data$Gender <- factor(c("Male","Female")[demog.data$Gender])
+demog.data$Gender <- factor(c("Male","Female")[demog.data$Gender], exclude=NULL)
 demog.data$Ethnicity <- factor(c("Black/African American","Hispanic/Latino","Asian/Pacific Islander",
                                  "Native American/American Indian","White/Caucasian")[demog.data$Ethnicity])
 demog.data$Education <- factor(c("Grammar School","Highschool or Equivalent","Vocational/Technical School",
@@ -53,11 +53,10 @@ demog.data$Education <- factor(c("Grammar School","Highschool or Equivalent","Vo
 
 demog.age <- aggregate(Age~expt, demog.data, FUN=function(x) c(M =mean(x), SD =sd(x)))
 demog.gender <- aggregate(Gender~expt, demog.data, FUN=table)
-#print(cbind(demog.age,demog.gender[,2]))
+print(cbind(demog.age,demog.gender[,2]))
 
 demog.ethnicity <- aggregate(Ethnicity~expt, demog.data, FUN=table)
 demog.education <- aggregate(Education~expt, demog.data, FUN=table)
-
 
 ###
 #######                                Study 1                                   ####### 
@@ -84,21 +83,26 @@ d1.table <- aggregate(Blame~Condition*Agent,data=d1.long,
                           FUN=function(x) c(M =mean(x), SD =sd(x), n =length(x)))
 print(d1.table)
 
-attach(d1.long)
-# t-test for effect of condition on *proximal* agent blame
-d1.Prox.ttest <- t.test(Blame[which(Condition=="Accidental" & Agent=="Proximal Agent")],
-                        Blame[which(Condition=="Intentional" & Agent=="Proximal Agent")])
-print(d1.Prox.ttest)
-cohensD(Blame[which(Condition=="Accidental" & Agent=="Proximal Agent")],
-        Blame[which(Condition=="Intentional" & Agent=="Proximal Agent")])
-
 # t-test for effect of condition on *distal* agent blame
-d1.Dist.ttest <- t.test(Blame[which(Condition=="Accidental"& Agent=="Distal Agent")],
-                        Blame[which(Condition=="Intentional"& Agent=="Distal Agent")],na.rm=T)
-print(d1.Dist.ttest)
+attach(d1.long)
+var.test(Blame[which(Condition=="Accidental"& Agent=="Distal Agent")],
+         Blame[which(Condition=="Intentional"& Agent=="Distal Agent")])
+
+t.test(Blame[which(Condition=="Accidental"& Agent=="Distal Agent")],
+       Blame[which(Condition=="Intentional"& Agent=="Distal Agent")])
+
 cohensD(Blame[which(Condition=="Accidental"& Agent=="Distal Agent")],
         Blame[which(Condition=="Intentional"& Agent=="Distal Agent")])
 
+# t-test for effect of condition on *proximal* agent blame
+var.test(Blame[which(Condition=="Accidental" & Agent=="Proximal Agent")],
+         Blame[which(Condition=="Intentional" & Agent=="Proximal Agent")])
+
+t.test(Blame[which(Condition=="Accidental" & Agent=="Proximal Agent")],
+       Blame[which(Condition=="Intentional" & Agent=="Proximal Agent")], var.equal=T)
+
+cohensD(Blame[which(Condition=="Accidental" & Agent=="Proximal Agent")],
+        Blame[which(Condition=="Intentional" & Agent=="Proximal Agent")])
 detach(d1.long)
 
 ## Study 1 Graph
@@ -106,7 +110,6 @@ mss.1 <- aggregate(Blame ~ Participant + Condition + Agent, d1.long,mean)
 ms.1 <- aggregate(Blame ~  Condition + Agent, mss.1,mean)
 ms.1$ci.h <- aggregate(Blame ~  Condition + Agent, mss.1, ci.high)$Blame
 ms.1$ci.l <- aggregate(Blame ~  Condition + Agent, mss.1, ci.low)$Blame
-ms.1$n <- aggregate(Participant ~  Condition + Agent, mss.1, n.unique)$Blame
 
 d1.graph <- ggplot(ms.1,aes(x=Agent, y=Blame, fill=Condition)) + 
   ylab("Blame Attribution") +
@@ -121,18 +124,19 @@ d1.graph <- ggplot(ms.1,aes(x=Agent, y=Blame, fill=Condition)) +
    ,panel.grid.major = element_blank()
    ,panel.grid.minor = element_blank()
    ,legend.title=element_blank()
-   ,legend.text=element_text(size=rel(1.2))
-   ,axis.text=element_text(size=rel(1.2))
-   ,axis.title=element_text(size=rel(1.2))
+   ,legend.text=element_text(size=rel(1.25))
+   ,axis.text=element_text(size=rel(1.25))
+   ,axis.title=element_text(size=rel(1.25))
     )
 d1.graph
-#ggsave(file="Study_1/Study1_graph.png")
+#ggsave(file="Study_1/Study1_graph.tiff")
+
 
 ###
 #######                                Study 2                                   ####### 
 ###
 
-d2 <- rbind(Study2.data1,Study2.data2)
+d2 <- rbind(Study2.data1,Study2.data2) ## was collected in two batches because mturk slows down when requesting a large number of HITs
 
 d2$Participant <- c(1:length(d2$Consent))
 d2$Condition <- factor(c("Consistent","Deviant")[d2$Condition])
@@ -154,19 +158,24 @@ print(d2.table)
 
 attach(d2.long)
 # t-test for effect of condition on *proximal* agent blame
-d2.Prox.ttest <- t.test(Blame[which(Condition=="Deviant" & Agent=="Proximal Agent")],
-                        Blame[which(Condition=="Consistent" & Agent=="Proximal Agent")])
-print(d2.Prox.ttest)
+var.test(Blame[which(Condition=="Deviant" & Agent=="Proximal Agent")],
+       Blame[which(Condition=="Consistent" & Agent=="Proximal Agent")])
+
+t.test(Blame[which(Condition=="Deviant" & Agent=="Proximal Agent")],
+       Blame[which(Condition=="Consistent" & Agent=="Proximal Agent")], var.equal=T)
+
 cohensD(Blame[which(Condition=="Deviant" & Agent=="Proximal Agent")],
         Blame[which(Condition=="Consistent" & Agent=="Proximal Agent")])
 
 # t-test for effect of condition on *distal* agent blame
-d2.Dist.ttest <- t.test(Blame[which(Condition=="Deviant"& Agent=="Distal Agent")],
-                        Blame[which(Condition=="Consistent"& Agent=="Distal Agent")])
-print(d2.Dist.ttest)
+var.test(Blame[which(Condition=="Deviant"& Agent=="Distal Agent")],
+       Blame[which(Condition=="Consistent"& Agent=="Distal Agent")])
+
+t.test(Blame[which(Condition=="Deviant"& Agent=="Distal Agent")],
+       Blame[which(Condition=="Consistent"& Agent=="Distal Agent")], var.equal=T)
+
 cohensD(Blame[which(Condition=="Deviant" & Agent=="Distal Agent")],
         Blame[which(Condition=="Consistent" & Agent=="Distal Agent")])
-
 detach(d2.long)
 
 # Study 2 Graph 
@@ -194,8 +203,7 @@ d2.graph <- ggplot(ms.2,aes(x=Agent, y=Blame, fill=Condition)) +
     ,axis.title=element_text(size=rel(1.2))
   )
 d2.graph
-
-#ggsave(file="Study_2/Study2_graph.png")
+#ggsave(file="Study_2/Study2_graph.tiff")
 
 ####
 #######                                Study 3                                   ####### 
@@ -211,11 +219,14 @@ d3$Condition <- factor(d3$Condition, levels= c("Intentional","Accidental"))
 d3.blame <- aggregate(Blame~Condition,data=d3,FUN=function(x) c(M =mean(x), SD =sd(x), n = length(x)))
 print(d3.blame)
 
-attach(d3)
 # t-test for effect of condition on *proximal* agent blame
-d3.Blame.ttest <- t.test(Blame[which(Condition=="Accidental")],
-                         Blame[which(Condition=="Intentional")])
-print(d3.Blame.ttest)
+attach(d3)
+var.test(Blame[which(Condition=="Accidental")],
+       Blame[which(Condition=="Intentional")])
+
+t.test(Blame[which(Condition=="Accidental")],
+       Blame[which(Condition=="Intentional")], var.equal=T)
+
 cohensD(Blame[which(Condition=="Accidental")],
         Blame[which(Condition=="Intentional")])
 
@@ -229,44 +240,76 @@ d3.cause <- aggregate(causeScale~Condition,data=d3,FUN=function(x) c(M =mean(x),
 print(d3.cause)
 
 # t-test for effect of condition on *proximal* agent blame
-d3.Cause.ttest <- t.test(causeScale[which(Condition=="Accidental")],
-                         causeScale[which(Condition=="Intentional")])
-print(d3.Cause.ttest)
-cohensD(causeScale[which(Condition=="Accidental")],
-        causeScale[which(Condition=="Intentional")])
+var.test(d3$causeScale[which(Condition=="Accidental")],
+         d3$causeScale[which(Condition=="Intentional")])
 
-### paste in the mediation analysis here
+t.test(d3$causeScale[which(Condition=="Accidental")],
+       d3$causeScale[which(Condition=="Intentional")], var.equal=T)
 
-# Mediation Figure NB: How this looks will depend on the graph dimension settings
-#   par(mfrow=c(1,1))
-#   xlim=c(0,15)
-#   ylim=c(0,10)
-#   plot(NA,xlim=xlim,ylim=ylim,axes=F,xlab="",ylab="")
-#   
-#   r1 <- dia.rect(1.1,5,"\n  Distal Agent  \n Intentions \n",xlim=xlim,ylim=ylim)
-#   r2 <- dia.rect(6.6,9,"\n  Distal Agent  \n Causation \n",xlim=xlim,ylim=ylim)
-#   r3 <- dia.rect(12.1,5,"\n Proximal Agent \n Blame \n",xlim=xlim,ylim=ylim)
-# 
-#   dia.arrow(from=r1$right+c(.1,0),to=r4$left-c(.1,0))
-#   dia.arrow(from=r1$top+c(0,.1),to=r2$left-c(.1,0))
-#   dia.arrow(from=r2$right+c(.1,0),to=r4$top+c(0,.1))
-# 
-#   text(6.5,5.5,labels="-.853 ***",srt=0)
-#   text(3.2,8,labels="1.042 ***",srt=32)
-#   text(9.9,8,labels="-.260 ***",srt=-32)
-#   text(6.5,4.5,labels="-.582  ",srt=0)
+cohensD(d3$causeScale[which(Condition=="Accidental")],
+        d3$causeScale[which(Condition=="Intentional")])
 
-# Convert to long form
+### Mediation analysis output from SPSS using Preacher and Hayes (2008) INDIRECT
+# Dependent, Independent, and Proposed Mediator Variables: 
+# DV =   Blame 
+# IV =   Condition 
+# MEDS = causeScale 
+#  
+# Sample size 
+#         125 
+#  
+# IV to Mediators (a paths) 
+#              Coeff        se         t         p 
+# causeSca    1.0421     .2057    5.0674     .0000 
+#  
+# Direct Effects of Mediators on DV (b paths) 
+#              Coeff        se         t         p 
+# causeSca    -.2604     .1196   -2.1767     .0314 
+#  
+# Total Effect of IV on DV (c path) 
+#              Coeff        se         t         p 
+# Conditio    -.8528     .2769   -3.0793     .0026 
+#  
+# Direct Effect of IV on DV (c' path) 
+#              Coeff        se         t         p 
+# Conditio    -.5815     .3000   -1.9385     .0549 
+#  
+# Model Summary for DV Model 
+#       R-sq  Adj R-sq         F       df1       df2         p 
+#      .1063     .0916    7.2542    2.0000  122.0000     .0011 
+#  
+# ***************************************************************** 
+#  
+#            BOOTSTRAP RESULTS FOR INDIRECT EFFECTS 
+#  
+# Indirect Effects of IV on DV through Proposed Mediators (ab paths) 
+#               Data      Boot      Bias        SE 
+# TOTAL       -.2713    -.2787    -.0073     .1550 
+# causeSca    -.2713    -.2787    -.0073     .1550 
+#  
+# Bias Corrected Confidence Intervals 
+#              Lower     Upper 
+# TOTAL       -.6152    -.0062 
+# causeSca    -.6152    -.0062 
+#  
+# ***************************************************************** 
+#  
+# Level of Confidence for Confidence Intervals: 
+#   95 
+#  
+# Number of Bootstrap Resamples: 
+#   5000
+
+# Study 3 Graph 
+## Converting to long form to make the aggregation easier
 d3.long <- melt(d3[,c("Condition","Participant","Blame","causeScale")],id.var=c("Condition","Participant"))
 colnames(d3.long) <- c("Condition","Participant","Question","Rating")
 d3.long$Question <- factor(c("Proximal Agent Blame","Distal Agent Causation")[d3.long$Question])
 
-# Study 3 Graph 
 mss.3 <- aggregate(Rating ~ Participant + Condition + Question, d3.long,mean)
 ms.3 <- aggregate(Rating ~  Condition + Question, mss.3,mean)
 ms.3$ci.h <- aggregate(Rating ~  Condition + Question, mss.3, ci.high)$Rating
 ms.3$ci.l <- aggregate(Rating ~  Condition + Question, mss.3, ci.low)$Rating
-ms.3$n <- aggregate(Participant ~  Condition + Question, mss.3, n.unique)$Rating
 
 d3.graph <- ggplot(ms.3,aes(x=Question, y=Rating, fill=Condition)) + 
   ylab("Agreement Rating") +
@@ -286,8 +329,7 @@ d3.graph <- ggplot(ms.3,aes(x=Question, y=Rating, fill=Condition)) +
     ,axis.title=element_text(size=rel(1.2))
   )
 d3.graph
-
-#ggsave(file="Study_3/Study3_graph.png")
+#ggsave(file="Study_3/Study3_graph.tiff")
 
 ###
 ######                                 Study 4a                                  #######      
@@ -312,10 +354,6 @@ print(d4a.table1)
 d4a.cause <- d4a[,7:9]
 alpha(d4a.cause)
 d4a$causeScale <- (d4a$Made+d4a$Because+d4a$Cause)/3
-#moral scale
-d4a.moral <- d4a[,10:12]
-alpha(d4a.moral)
-d4a$moralScale <- (d4a$Blame.1+d4a$Wrong+d4a$Bad)/3
 
 # Distal Agent Causation Analyses
 d4a.Cause.anova <- aov(causeScale~Condition*Scenario, data=d4a)
@@ -326,7 +364,12 @@ etaSquared(d4a.Cause.anova)
 d4a.Cause.table1 <- aggregate(causeScale~Condition,data=d4a,FUN=function(x) c(M =mean(x), SD =sd(x), n = length(x)))
 print(d4a.Cause.table1)
 
-# Distal Agent Moral Responsibility Aanalyses
+#moral scale
+d4a.moral <- d4a[,10:12]
+alpha(d4a.moral)
+d4a$moralScale <- (d4a$Blame.1+d4a$Wrong+d4a$Bad)/3
+
+# Distal Agent Moral Responsibility Analyses
 d4a.Moral.anova <- aov(moralScale~Condition*Scenario, data=d4a)
 summary(d4a.Moral.anova)
 etaSquared(d4a.Moral.anova)
@@ -334,6 +377,134 @@ etaSquared(d4a.Moral.anova)
 #Mean, SD and n for dital agent *morality* in both condition, collapsing across scenario
 d4a.Moral.table1 <- aggregate(moralScale~Condition,data=d4a,FUN=function(x) c(M =mean(x), SD =sd(x), n = length(x)))
 print(d4a.Moral.table1)
+
+# Mediation analysis output from SPSS using Preacher and Hayes (2008) INDIRECT
+##Multiple Mediation
+# Dependent, Independent, and Proposed Mediator Variables: 
+# DV =   Blame_A 
+# IV =   Conditio 
+# MEDS = Causatio 
+#        Moral 
+#  
+# Sample size 
+#         193 
+#  
+# IV to Mediators (a paths) 
+#              Coeff        se         t         p 
+# Causatio    1.7599     .2093    8.4072     .0000 
+# Moral       2.9504     .1742   16.9343     .0000 
+#  
+# Direct Effects of Mediators on DV (b paths) 
+#              Coeff        se         t         p 
+# Causatio    -.4524     .1018   -4.4443     .0000 
+# Moral        .1264     .1223    1.0339     .3025 
+#  
+# Total Effect of IV on DV (c path) 
+#              Coeff        se         t         p 
+# Conditio    -.9620     .2582   -3.7257     .0003 
+#  
+# Direct Effect of IV on DV (c' path) 
+#              Coeff        se         t         p 
+# Conditio    -.5389     .3884   -1.3873     .1670 
+#  
+# Model Summary for DV Model 
+#       R-sq  Adj R-sq         F       df1       df2         p 
+#      .1676     .1544   12.6891    3.0000  189.0000     .0000 
+#  
+# ***************************************************************** 
+#  
+#            BOOTSTRAP RESULTS FOR INDIRECT EFFECTS 
+#  
+# Indirect Effects of IV on DV through Proposed Mediators (ab paths) 
+#               Data      Boot      Bias        SE 
+# TOTAL       -.4231    -.4374    -.0144     .2848 
+# Causatio    -.7961    -.7951     .0010     .1930 
+# Moral        .3731     .3577    -.0154     .3143 
+#  
+# Bias Corrected Confidence Intervals 
+#              Lower     Upper 
+# TOTAL       -.9929     .1024 
+# Causatio   -1.2021    -.4447 
+# Moral       -.2595     .9625 
+#  
+# ***************************************************************** 
+#  
+# Level of Confidence for Confidence Intervals: 
+#   95 
+#  
+# Number of Bootstrap Resamples: 
+#   5000 
+
+##Partial correlation (controlling for condition) from SPSS
+####      #     #     #     #     #     #       #
+##Control Variables		       #Causation	 #Moral #
+####      #     #     #     #     #     #       #
+##Causation	    Correlation	 #1.000	     #.553  #
+##	 Significance (2-tailed) # -         #.000  #
+##		                    df #0	         #190   #
+####      #     #     #     #     #     #       #
+##Moral	        Correlation	 #.553	     #1.000 #
+##   Significance (2-tailed) #.000	     # -    #
+##		                    df #190        #0     #
+####      #     #     #     #     #     #       #
+
+##Or, if you want a quick look at the overall (non-paritial) matrix, here's that 
+d4a.corr <- (d4a[,7:12])
+corstarsl(d4a.corr)
+
+#Single mediation with only the moral scale
+# Dependent, Independent, and Proposed Mediator Variables: 
+# DV =   Blame_A 
+# IV =   Conditio 
+# MEDS = Moral 
+#  
+# Sample size 
+#         193 
+#  
+# IV to Mediators (a paths) 
+#           Coeff        se         t         p 
+# Moral    2.9504     .1742   16.9343     .0000 
+#  
+# Direct Effects of Mediators on DV (b paths) 
+#           Coeff        se         t         p 
+# Moral    -.1744     .1068   -1.6334     .1040 
+#  
+# Total Effect of IV on DV (c path) 
+#              Coeff        se         t         p 
+# Conditio    -.9620     .2582   -3.7257     .0003 
+#  
+# Direct Effect of IV on DV (c' path) 
+#              Coeff        se         t         p 
+# Conditio    -.4474     .4066   -1.1004     .2725 
+#  
+# Model Summary for DV Model 
+#       R-sq  Adj R-sq         F       df1       df2         p 
+#      .0807     .0710    8.3350    2.0000  190.0000     .0003 
+#  
+# ***************************************************************** 
+#  
+#            BOOTSTRAP RESULTS FOR INDIRECT EFFECTS 
+#  
+# Indirect Effects of IV on DV through Proposed Mediators (ab paths) 
+#            Data      Boot      Bias        SE 
+# TOTAL    -.5145    -.5320    -.0175     .2966 
+# Moral    -.5145    -.5320    -.0175     .2966 
+#  
+# Bias Corrected Confidence Intervals 
+#           Lower     Upper 
+# TOTAL   -1.1269     .0450 
+# Moral   -1.1269     .0450 
+#  
+# ***************************************************************** 
+#  
+# Level of Confidence for Confidence Intervals: 
+#   95 
+#  
+# Number of Bootstrap Resamples: 
+#   5000
+
+## The additional analyses can be most easily replicated using the provided SPSS file, but are not replicated here
+## as a way of keeping this document manageable. 
 
 ##convert to long form
 d4a.long <- melt(d4a[,c("Participant","Condition","Scenario","Blame","causeScale","moralScale")],id.var=c("Condition","Participant","Scenario"))
@@ -347,7 +518,6 @@ mss.4a <- aggregate(Rating ~ Participant + Condition + Scenario + Question, d4a.
 ms.4a <- aggregate(Rating ~  Condition + Scenario + Question, mss.4a,mean)
 ms.4a$ci.h <- aggregate(Rating ~  Condition + Scenario + Question, mss.4a, ci.high)$Rating
 ms.4a$ci.l <- aggregate(Rating ~  Condition + Scenario + Question, mss.4a, ci.low)$Rating
-ms.4a$n <- aggregate(Participant ~  Condition + Scenario + Question, mss.4a, n.unique)$Rating
 
 d4a.graph <- ggplot(ms.4a,aes(x=Question, y=Rating, fill=Condition)) + 
   ylab("Agreement Rating") +
@@ -368,39 +538,7 @@ d4a.graph <- ggplot(ms.4a,aes(x=Question, y=Rating, fill=Condition)) +
     ,axis.title=element_text(size=rel(1.2))
   )
 d4a.graph
-
-#ggsave(file="Study_4/Study4a_graph.png")
-
-## Paste mediation output
-
-## Mediation Graph
-xlim=c(0,15)
-ylim=c(0,10)
-plot(NA,xlim=xlim,ylim=ylim,axes=F,xlab="",ylab="")
-r1 <- dia.rect(1.1,5,"\n  Distal Agent  \n Intentions \n",xlim=xlim,ylim=ylim)
-r2 <- dia.rect(6.6,9,"\n  Distal Agent  \n Causation \n",xlim=xlim,ylim=ylim)
-r3 <- dia.rect(6.6,1,"\n  Distal Agent  \n Morality \n",xlim=xlim,ylim=ylim)
-r4 <- dia.rect(12.1,5,"\n Proximal Agent \n Blame \n",xlim=xlim,ylim=ylim)
-
-dia.arrow(from=r1$right+c(.1,0),to=r4$left-c(.1,0))
-dia.arrow(from=r1$top+c(0,.1),to=r2$left-c(.1,0))
-dia.arrow(from=r2$right+c(.1,0),to=r4$top+c(0,.1))
-dia.arrow(from=r1$bottom-c(0,.1),to=r3$left-c(.1,0))
-dia.arrow(from=r3$right+c(.1,0),to=r4$bottom-c(0,.1))
-
-text(6.5,5.5,labels="-0.962 ***",srt=0) #c
-text(3.2,8,labels="1.760 ***",srt=33) #a1
-text(3.2,2,labels="2.950 ***",srt=-33) #a2
-text(9.8,8,labels="-0.452 ***",srt=-33) #b1
-text(9.8,2,labels="-0.126  ",srt=33) #b2
-text(6.5,4.5,labels="-0.540  ",srt=0) #c'
-
-##See correlation matrix of cause and blame items ____ can you make this a partial correlation function??
-##NB: this isn't the partial correlation method that was reported in the paper. That was calculated in SPSS
-d4a.corr <- (d4a[,7:12])
-corstarsl(d4a.corr)
-
-## ADD VIF ANALYSIS HERE
+#ggsave(file="Study_4/Study4a_graph.tiff")
 
 ###
 #######                      Study 4b                              ####### 
@@ -440,7 +578,69 @@ etaSquared(d4b.Moral.anova)
 d4b.Moral.table1 <- aggregate(Wrong~Condition,data=d4b,FUN=function(x) c(M =mean(x), SD =sd(x), n = length(x)))
 print(d4b.Moral.table1)
 
-# Transform data from wide to long form
+## VIF analysis
+lm1 <- lm(d4b$Blame ~ d4b$Made + d4b$Wrong)
+vif(lm1)
+
+# Mediation analysis output from SPSS using Preacher and Hayes (2008) INDIRECT
+##Multiple Mediation with Made and Wrong
+# Dependent, Independent, and Proposed Mediator Variables: 
+# DV =   Blame 
+# IV =   Conditio 
+# MEDS = Made 
+#        Wrong 
+#  
+# Sample size 
+#         405 
+#  
+# IV to Mediators (a paths) 
+#           Coeff        se         t         p 
+# Made     1.9996     .1841   10.8606     .0000 
+# Wrong    2.3918     .1397   17.1209     .0000 
+#  
+# Direct Effects of Mediators on DV (b paths) 
+#           Coeff        se         t         p 
+# Made     -.2456     .0479   -5.1319     .0000 
+# Wrong     .0093     .0631     .1468     .8833 
+#  
+# Total Effect of IV on DV (c path) 
+#              Coeff        se         t         p 
+# Conditio    -.7252     .1786   -4.0596     .0001 
+#  
+# Direct Effect of IV on DV (c' path) 
+#              Coeff        se         t         p 
+# Conditio    -.2562     .2370   -1.0811     .2803 
+#  
+# Model Summary for DV Model 
+#       R-sq  Adj R-sq         F       df1       df2         p 
+#      .1002     .0935   14.8835    3.0000  401.0000     .0000 
+#  
+# ***************************************************************** 
+#  
+#            BOOTSTRAP RESULTS FOR INDIRECT EFFECTS 
+#  
+# Indirect Effects of IV on DV through Proposed Mediators (ab paths) 
+#            Data      Boot      Bias        SE 
+# TOTAL    -.4689    -.4702    -.0013     .1796 
+# Made     -.4911    -.4923    -.0012     .1118 
+# Wrong     .0221     .0221     .0000     .1559 
+#  
+# Bias Corrected Confidence Intervals 
+#           Lower     Upper 
+# TOTAL    -.8233    -.1214 
+# Made     -.7299    -.2844 
+# Wrong    -.2831     .3350 
+#  
+# ***************************************************************** 
+#  
+# Level of Confidence for Confidence Intervals: 
+#   95 
+#  
+# Number of Bootstrap Resamples: 
+#   5000 
+
+#Graphs
+## Transform data from wide to long form
 d4b.long <- melt(d4b[,c("Participant","Condition","Scenario","Blame","Wrong","Made")],id.var=c("Condition","Participant","Scenario"))
 colnames(d4b.long) <- c("Condition","Participant","Scenario","Question","Rating")
 d4b.long$Question <- factor(c("Proximal Blame","Distal Wrong","Distal Made")[d4b.long$Question])
@@ -452,7 +652,6 @@ mss.4b <- aggregate(Rating ~ Participant + Condition + Scenario + Question, d4b.
 ms.4b <- aggregate(Rating ~  Condition + Scenario + Question, mss.4b,mean)
 ms.4b$ci.h <- aggregate(Rating ~  Condition + Scenario + Question, mss.4b, ci.high)$Rating
 ms.4b$ci.l <- aggregate(Rating ~  Condition + Scenario + Question, mss.4b, ci.low)$Rating
-ms.4b$n <- aggregate(Participant ~  Condition + Scenario + Question, mss.4b, n.unique)$Rating
 
 d4b.graph <- ggplot(ms.4b,aes(x=Question, y=Rating, fill=Condition)) + 
   ylab("Agreement Rating") +
@@ -473,34 +672,7 @@ d4b.graph <- ggplot(ms.4b,aes(x=Question, y=Rating, fill=Condition)) +
     ,axis.title=element_text(size=rel(1.2))
   )
 d4b.graph
-
-#ggsave(file="Study_4/Study4b_graph.png")
-
-
-# Paste mediation output
-
-## Mediation Graph
-par(mfrow=c(1,1))
-xlim=c(0,15)
-ylim=c(0,10)
-plot(NA,xlim=xlim,ylim=ylim,axes=F,xlab="",ylab="")
-r1 <- dia.rect(1.1,5,"\n  Distal Agent  \n Intentions \n",xlim=xlim,ylim=ylim)
-r2 <- dia.rect(6.6,9,"\n  Distal Agent  \n Made \n",xlim=xlim,ylim=ylim)
-r3 <- dia.rect(6.6,1,"\n  Distal Agent  \n Wrong \n",xlim=xlim,ylim=ylim)
-r4 <- dia.rect(12.1,5,"\n Proximal Agent \n Blame \n",xlim=xlim,ylim=ylim)
-
-dia.arrow(from=r1$right+c(.1,0),to=r4$left-c(.1,0))
-dia.arrow(from=r1$top+c(0,.1),to=r2$left-c(.1,0))
-dia.arrow(from=r2$right+c(.1,0),to=r4$top+c(0,.1))
-dia.arrow(from=r1$bottom-c(0,.1),to=r3$left-c(.1,0))
-dia.arrow(from=r3$right+c(.1,0),to=r4$bottom-c(0,.1))
-
-text(6.5,5.5,labels="-0.725 ***",srt=0)
-text(3.2,8,labels="2.000 ***",srt=30)
-text(3.2,2,labels="2.392 ***",srt=-30)
-text(9.8,8,labels="-0.246 ***",srt=-30)
-text(9.8,2,labels="-0.014  ",srt=30)
-text(6.5,4.5,labels="-0.256  ",srt=0)
+#ggsave(file="Study_4/Study4b_graph.tiff")
 
 #######                      Study 5                              ####### 
 
@@ -537,61 +709,6 @@ etaSquared(d5.Caused.anova)
 #Mean, SD and n for dital agent *caused* judgments for the *situation*, collapsing across scenario
 d5.Caused.table1 <- aggregate(Cause~Condition,data=d5[which(d5$causeQuestion=="Situation Caused"),],FUN=function(x) c(M =mean(x), SD =sd(x), n = length(x)))
 print(d5.Caused.table1)
-
-d5$Scenario <- factor(c("Scenario 1","Scenario 2","Scenario 3","Scenario 4")[d5$Scenario])
-d5$Condition <- factor(d5$Condition, levels=c("Intentional","Accidental"))
-d5$causeQuestion <- factor(c("Distal Made","Situation Caused")[d5$causeQuestion])
-
-##Blame graph
-mss.5.1 <- aggregate(Blame ~ Participant + Condition, d5,mean)
-ms.5.1 <- aggregate(Blame ~  Condition, mss.5.1,mean)
-ms.5.1$ci.h <- aggregate(Blame ~  Condition, mss.5.1, ci.high)$Blame
-ms.5.1$ci.l <- aggregate(Blame ~  Condition, mss.5.1, ci.low)$Blame
-ms.5.1$n <- aggregate(Participant ~  Condition, mss.5.1, n.unique)$Blame
-
-d5.1.graph <- ggplot(ms.5.1,aes(x=Condition, y=Blame, fill=Condition)) + 
-  ylab("Agreement Rating") +
-  coord_cartesian(ylim = c(1, 7)) +
-  xlab("Blame Attribution") +
-  scale_fill_manual(values=blackGreyPalette) + 
-  geom_bar(position="dodge",stat="identity") +
-  geom_linerange(aes(ymin=Blame - ms.5.1$ci.l, ymax=Blame + ms.5.1$ci.h),
-                 position=position_dodge(1)) +
-  theme(
-    plot.background = element_blank()
-    ,panel.grid.major = element_blank()
-    ,panel.grid.minor = element_blank()
-    ,axis.text.x = element_blank()
-    ,legend.position = "none"
-    ,axis.text=element_text(size=rel(1.2))
-    ,axis.title=element_text(size=rel(1.2))
-  )
-
-##Cause graph
-mss.5.2 <- aggregate(Cause ~ Participant + Condition + causeQuestion, d5,mean)
-ms.5.2 <- aggregate(Cause ~  Condition + causeQuestion, mss.5.2,mean)
-ms.5.2$ci.h <- aggregate(Cause ~  Condition + causeQuestion, mss.5.2, ci.high)$Cause
-ms.5.2$ci.l <- aggregate(Cause ~  Condition + causeQuestion, mss.5.2, ci.low)$Cause
-ms.5.2$n <- aggregate(Participant ~  Condition + causeQuestion, mss.5.2, n.unique)$Cause
-
-d5.2.graph <- ggplot(ms.5.2,aes(x=causeQuestion, y=Cause, fill=Condition)) + 
-  coord_cartesian(ylim = c(1, 7)) +
-  scale_fill_manual(values=blackGreyPalette) + 
-  geom_bar(position="dodge",stat="identity") +
-  geom_linerange(aes(ymin=Cause - ms.5.2$ci.l, ymax=Cause + ms.5.2$ci.h),
-                 position=position_dodge(.9)) +
-  theme(
-    plot.background = element_blank()
-    ,panel.grid.major = element_blank()
-    ,panel.grid.minor = element_blank()
-    ,legend.title=element_blank()
-    ,legend.text=element_text(size=rel(1.2))
-    ,axis.title=element_blank()
-    ,axis.text=element_text(size=rel(1.2))
-    ,axis.title=element_text(size=rel(1.2))
-  )
-
-multiplot(d5.1.graph , d5.2.graph, layout=matrix(c(1,1,2,2,2,2),1,6))
 
 ### Mediations from SPSS
 ## Agent Made ##
@@ -696,3 +813,57 @@ multiplot(d5.1.graph , d5.2.graph, layout=matrix(c(1,1,2,2,2,2),1,6))
 #   1000 
 # 
 
+#Graphs
+d5$Scenario <- factor(c("Scenario 1","Scenario 2","Scenario 3","Scenario 4")[d5$Scenario])
+d5$Condition <- factor(d5$Condition, levels=c("Intentional","Accidental"))
+d5$causeQuestion <- factor(c("Distal Made","Situation Caused")[d5$causeQuestion])
+##Blame graph
+mss.5.1 <- aggregate(Blame ~ Participant + Condition, d5,mean)
+ms.5.1 <- aggregate(Blame ~  Condition, mss.5.1,mean)
+ms.5.1$ci.h <- aggregate(Blame ~  Condition, mss.5.1, ci.high)$Blame
+ms.5.1$ci.l <- aggregate(Blame ~  Condition, mss.5.1, ci.low)$Blame
+
+d5.1.graph <- ggplot(ms.5.1,aes(x=Condition, y=Blame, fill=Condition)) + 
+  ylab("Agreement Rating") +
+  coord_cartesian(ylim = c(1, 7)) +
+  xlab("Blame Attribution") +
+  scale_fill_manual(values=blackGreyPalette) + 
+  geom_bar(position="dodge",stat="identity") +
+  geom_linerange(aes(ymin=Blame - ms.5.1$ci.l, ymax=Blame + ms.5.1$ci.h),
+                 position=position_dodge(1)) +
+  theme(
+    plot.background = element_blank()
+    ,panel.grid.major = element_blank()
+    ,panel.grid.minor = element_blank()
+    ,axis.text.x = element_blank()
+    ,legend.position = "none"
+    ,axis.text=element_text(size=rel(1.2))
+    ,axis.title=element_text(size=rel(1.2))
+  )
+
+##Cause graph
+mss.5.2 <- aggregate(Cause ~ Participant + Condition + causeQuestion, d5,mean)
+ms.5.2 <- aggregate(Cause ~  Condition + causeQuestion, mss.5.2,mean)
+ms.5.2$ci.h <- aggregate(Cause ~  Condition + causeQuestion, mss.5.2, ci.high)$Cause
+ms.5.2$ci.l <- aggregate(Cause ~  Condition + causeQuestion, mss.5.2, ci.low)$Cause
+
+d5.2.graph <- ggplot(ms.5.2,aes(x=causeQuestion, y=Cause, fill=Condition)) + 
+  coord_cartesian(ylim = c(1, 7)) +
+  scale_fill_manual(values=blackGreyPalette) + 
+  geom_bar(position="dodge",stat="identity") +
+  geom_linerange(aes(ymin=Cause - ms.5.2$ci.l, ymax=Cause + ms.5.2$ci.h),
+                 position=position_dodge(.9)) +
+  theme(
+    plot.background = element_blank()
+    ,panel.grid.major = element_blank()
+    ,panel.grid.minor = element_blank()
+    ,legend.title=element_blank()
+    ,legend.text=element_text(size=rel(1.2))
+    ,axis.title=element_blank()
+    ,axis.text=element_text(size=rel(1.2))
+    ,axis.title=element_text(size=rel(1.2))
+  )
+
+jpeg(filename = "Figures/Figure_9.jpg", width=836, height=623, pointsize =12, quality = 200, bg = "white", res = NA, restoreConsole = TRUE)
+multiplot(d5.1.graph , d5.2.graph, layout=matrix(c(1,1,2,2,2,2),1,6))
+dev.off()
