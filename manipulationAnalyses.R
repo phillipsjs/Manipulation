@@ -1,4 +1,4 @@
-
+#### Author and title program ####
 #######   Authors: Phillips, J. & Shaw, A.       ###
 #######   Title: Manipulating Morality           ###
 #######   Contact: jonathan.phillips@yale.edu    ###
@@ -15,8 +15,7 @@ source("manipulationSource.R")
 ##    The SPSS macro for INDIRECT can be downloaded from http://afhayes.com/spss-sas-and-mplus-macros-and-code.html
 ##    The INDIRECT macro outputs are included in this file for ease of reference
 
-
-# Data and Demographics ---------------------------------------------------------------
+#### Data and Demographics ---------------------------------------------------------------
 
 Study1.data <- read.csv("Study_1/Study1_data.csv")
 Study2.data1 <- read.csv("Study_2/Study2_data.csv")
@@ -59,6 +58,7 @@ demog.ethnicity <- aggregate(Ethnicity~expt, demog.data, FUN=table)
 demog.education <- aggregate(Education~expt, demog.data, FUN=table)
 
 ###
+
 #######                                Study 1                                   ####### 
 ###
 
@@ -133,6 +133,7 @@ d1.graph
 
 
 ###
+
 #######                                Study 2                                   ####### 
 ###
 
@@ -206,6 +207,7 @@ d2.graph
 #ggsave(file="Study_2/Study2_graph.tiff")
 
 ####
+
 #######                                Study 3                                   ####### 
 ####
 
@@ -332,6 +334,7 @@ d3.graph
 #ggsave(file="Study_3/Study3_graph.tiff")
 
 ###
+
 ######                                 Study 4a                                  #######      
 ###
 
@@ -541,6 +544,7 @@ d4a.graph
 #ggsave(file="Study_4/Study4a_graph.tiff")
 
 ###
+
 #######                      Study 4b                              ####### 
 ###
 
